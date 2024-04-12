@@ -128,10 +128,12 @@ ignore_args = [
 async def normal_launch_async(playwright: Playwright,trace_dir=None):
     browser = await playwright.chromium.launch(
         traces_dir=None,
-        headless=True,
+        headless=False,
         args=[
             "--disable-blink-features=AutomationControlled",
+            "--remote-debugging-port=9222",
         ],
+        channel = "chrome"
         # ignore_default_args=ignore_args,
         # chromium_sandbox=False,
     )
@@ -140,7 +142,7 @@ async def normal_launch_async(playwright: Playwright,trace_dir=None):
 
 def normal_launch(playwright: Playwright):
     browser = playwright.chromium.launch(
-        headless=True,
+        headless=False,
         args=['--incognito',
               "--disable-blink-features=AutomationControlled",
               ],
@@ -150,6 +152,7 @@ def normal_launch(playwright: Playwright):
 
 
 async def normal_new_context_async(
+        playwright,
         browser,
         storage_state=None,
         har_path=None,
@@ -164,6 +167,10 @@ async def normal_new_context_async(
         viewport: dict = {"width": 1280, "height": 720},
 ):
     city = random.choice(list_us_cities)
+    browser = await playwright.chromium.connect_over_cdp('ws://127.0.0.1:9222/devtools/browser/f127a215-21c2-49e2-bdd4-7a7e847379fd')
+    context = browser.contexts[0]
+    # await context.set_viewport_size(viewport)
+    '''
     context = await browser.new_context(
         storage_state=storage_state,
         user_agent=user_agent,
@@ -173,6 +180,7 @@ async def normal_new_context_async(
         record_video_dir=video_path,
         geolocation=geolocation,
     )
+    '''
 
     if tracing:
         await context.tracing.start(screenshots=trace_screenshots, snapshots=trace_snapshots, sources=trace_sources)

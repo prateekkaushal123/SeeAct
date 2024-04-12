@@ -1,7 +1,7 @@
 [
     {
-        "confirmed_task": "Compare iPhone 15 Pro Max with iPhone 13 Pro Max",
-        "website": "https://www.apple.com/iphone/",
+        "confirmed_task": "Send mail to kausprat@amazon.com with subject \"hi\" and body \"hello\"",
+        "website": "https://mail.google.com/",
         "task_id": "compare_iphone15ro"
       }
 ]
