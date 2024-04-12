@@ -128,7 +128,7 @@ ignore_args = [
 async def normal_launch_async(playwright: Playwright,trace_dir=None):
     browser = await playwright.chromium.launch(
         traces_dir=None,
-        headless=False,
+        headless=True,
         args=[
             "--disable-blink-features=AutomationControlled",
         ],
@@ -140,7 +140,7 @@ async def normal_launch_async(playwright: Playwright,trace_dir=None):
 
 def normal_launch(playwright: Playwright):
     browser = playwright.chromium.launch(
-        headless=False,
+        headless=True,
         args=['--incognito',
               "--disable-blink-features=AutomationControlled",
               ],

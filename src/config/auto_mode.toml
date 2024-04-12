@@ -1,5 +1,5 @@
 [basic]
-is_demo = false # Set to true for demo mode, prompting user input for tasks and URLs. False reads tasks from a JSON file.
+is_demo = true # Set to true for demo mode, prompting user input for tasks and URLs. False reads tasks from a JSON file.
 save_file_dir = "../online_results" # Directory to save the results of the program's operations.
 default_task ="Find pdf of paper \"GPT-4V(ision) is a Generalist Web Agent, if Grounded\" from arXiv" # Default task to perform.
 default_website = "https://www.google.com/" # Default website to start the task.
@@ -14,7 +14,7 @@ dynamic_choice_batch_size=1600 # Dynamic batch size based on webpage height. Ove
 max_continuous_no_op = 2 # Maximum number of consecutive ineffective operations allowed.
 max_op = 20 # Maximum number of operations to attempt.
 highlight = false # If true, highlights elements during processing. Included in screenshots.
-monitor = true # Monitors each step. Pausing after each operation for safety, recommended to be always true. You should always monitor agents' behavior even if is set as false.
+monitor = false # Monitors each step. Pausing after each operation for safety, recommended to be always true. You should always monitor agents' behavior even if is set as false.
 dev_mode=false # Developer mode toggle.
 # storage_state="" # Path to a saved cookie file, if any.
 # ranker_path = "../model/deberta-v3-base" # Path to the ranking model. Comment out to disable ranking and treat all elements as candidates.
@@ -36,8 +36,8 @@ tracing = false # Toggle to save Playwright trace files. This will significantly
 locale="en-US" # Locale setting, can affect webpage language.
 geolocation.longitude=39.99542778404405 # Longitude for geolocation.
 geolocation.latitude=-83.0068669912263 # Latitude for geolocation.
-viewport.width = 1280 # Browser window width.
-viewport.height = 720 # Browser window height.
+viewport.width = 720 # Browser window width.
+viewport.height = 480 # Browser window height.
 trace.screenshots = true # Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
 trace.snapshots = true # Capture DOM snapshot on every action and record network activity.
 trace.sources = true # Whether to include source files for trace actions.
