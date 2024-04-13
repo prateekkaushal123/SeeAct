@@ -44,7 +44,7 @@ from demo_utils.website_dict import website_dict
 # Remove Huggingface internal warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore", category=UserWarning)
-config_viewport_size = {"width":1280, "height":720}
+
 
 @dataclass
 class SessionControl:
@@ -113,7 +113,6 @@ async def page_on_open_handler(page):
     page.on("framenavigated", page_on_navigatio_handler)
     page.on("close", page_on_close_handler)
     page.on("crash", page_on_crash_handler)
-    await page.set_viewport_size({"width": config_viewport_size["width"], "height": config_viewport_size["height"]})
     session_control.active_page = page
     # print("The active tab is set to: ", page.url)
     # print("All pages:")
@@ -167,7 +166,6 @@ async def main(config, base_dir) -> None:
     # playwright settings
     save_video = config["playwright"]["save_video"]
     viewport_size = config["playwright"]["viewport"]
-    config_viewport_size = viewport_size
     tracing = config["playwright"]["tracing"]
     locale = None
     try:
@@ -252,7 +250,7 @@ async def main(config, base_dir) -> None:
         logger.info(f"id: {task_id}")
         async with async_playwright() as playwright:
             session_control.browser = await normal_launch_async(playwright)
-            session_control.context = await normal_new_context_async(playwright, session_control.browser,
+            session_control.context = await normal_new_context_async(session_control.browser,
                                                                      tracing=tracing,
                                                                      storage_state=storage_state,
                                                                      video_path=main_result_path if save_video else None,
@@ -870,7 +868,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-c", "--config_path", help="Path to the TOML configuration file.", type=str, metavar='config',
-                        default=f"{os.path.join('config', 'auto_mode.toml')}")
+                        default=f"{os.path.join('config', 'demo_mode.toml')}")
     args = parser.parse_args()
 
     # Load configuration file
