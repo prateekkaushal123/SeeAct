@@ -131,7 +131,9 @@ async def normal_launch_async(playwright: Playwright,trace_dir=None):
         headless=True,
         args=[
             "--disable-blink-features=AutomationControlled",
+            "--remote-debugging-port=9222",
         ],
+        channel = "chrome"
         # ignore_default_args=ignore_args,
         # chromium_sandbox=False,
     )
@@ -150,6 +152,7 @@ def normal_launch(playwright: Playwright):
 
 
 async def normal_new_context_async(
+        playwright,
         browser,
         storage_state=None,
         har_path=None,
@@ -164,6 +167,9 @@ async def normal_new_context_async(
         viewport: dict = {"width": 1280, "height": 720},
 ):
     city = random.choice(list_us_cities)
+    browser = await playwright.chromium.connect_over_cdp('ws://0.0.0.0:9222/devtools/browser/93b74441-6947-4b57-a64a-60b0b3270279')
+    context = browser.contexts[0]
+    '''
     context = await browser.new_context(
         storage_state=storage_state,
         user_agent=user_agent,
@@ -173,6 +179,7 @@ async def normal_new_context_async(
         record_video_dir=video_path,
         geolocation=geolocation,
     )
+    '''
 
     if tracing:
         await context.tracing.start(screenshots=trace_screenshots, snapshots=trace_snapshots, sources=trace_sources)
