@@ -251,7 +251,7 @@ async def main(config, base_dir) -> None:
 
         logger.info(f"website: {confirmed_website_url}")
         logger.info(f"task: {confirmed_task}")
-        logger.info(f"id: {task_id}")
+        #logger.info(f"id: {task_id}")
         async with async_playwright() as playwright:
             session_control.browser = await normal_launch_async(playwright)
             session_control.context = await normal_new_context_async(playwright, session_control.browser,
@@ -270,7 +270,7 @@ async def main(config, base_dir) -> None:
                 await session_control.active_page.goto(confirmed_website_url, wait_until="load")
             except Exception as e:
                 logger.info("Failed to fully load the webpage before timeout")
-                logger.info(e)
+                #logger.info(e)
             await asyncio.sleep(3)
 
             taken_actions = []
@@ -285,18 +285,21 @@ async def main(config, base_dir) -> None:
                     logger.info(f"Page at the start: {session_control.active_page}")
                 await session_control.active_page.bring_to_front()
                 terminal_width = 10
-                logger.info("=" * terminal_width)
-                logger.info(f"Time step: {time_step}")
-                logger.info('-' * 10)
+                #logger.info("=" * terminal_width)
+                #logger.info(f"Time step: {time_step}")
+                #logger.info('-' * 10)
                 elements = await get_interactive_elements_with_playwright(session_control.active_page)
 
                 if tracing:
                     await session_control.context.tracing.start_chunk(title=f'{task_id}-Time Step-{time_step}',
                                                                       name=f"{time_step}")
+                '''
                 logger.info(f"# all elements: {len(elements)}")
                 if dev_mode:
                     for i in elements:
                         logger.info(i[1:])
+                '''
+                
                 time_step += 1
 
                 if len(elements) == 0:
@@ -324,11 +327,11 @@ async def main(config, base_dir) -> None:
                         logger.info(action)
                     logger.info("")
                     if tracing:
-                        logger.info("Save playwright trace file ")
+                        #logger.info("Save playwright trace file ")
                         await session_control.context.tracing.stop_chunk(
                             path=f"{os.path.join(main_result_path, 'playwright_traces', f'{time_step}.zip')}")
 
-                    logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
+                    #logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
                     success_or_not = ""
                     if valid_op_count == 0:
                         success_or_not = "0"
@@ -344,7 +347,7 @@ async def main(config, base_dir) -> None:
                     # if monitor:
                     #     logger.info("Wait for human inspection. Directly press Enter to exit")
                     #     monitor_input = await ainput()
-                    logger.info("Close browser context")
+                    #logger.info("Close browser context")
                     logger.removeHandler(log_fh)
                     logger.removeHandler(console_handler)
 
@@ -355,7 +358,7 @@ async def main(config, base_dir) -> None:
                     continue
                 if ranker_path and len(elements) > top_k:
                     ranking_input = format_ranking_input(elements, confirmed_task, taken_actions)
-                    logger.info("Start to rank")
+                    #logger.info("Start to rank")
                     pred_scores = ranking_model.predict(ranking_input, convert_to_numpy=True, show_progress_bar=False,
                                                         batch_size=100, )
                     topk_values, topk_indices = find_topk(pred_scores, k=min(top_k, len(elements)))
@@ -375,8 +378,8 @@ async def main(config, base_dir) -> None:
 
                 all_candidate_ids = [element_id[0] for element_id in all_candidate_ids_with_location]
                 num_choices = len(all_candidate_ids)
-                if ranker_path:
-                    logger.info(f"# element candidates: {num_choices}")
+                #if ranker_path:
+                    #logger.info(f"# element candidates: {num_choices}")
 
                 total_height = await session_control.active_page.evaluate('''() => {
                                                                 return Math.max(
@@ -390,8 +393,8 @@ async def main(config, base_dir) -> None:
                                       num_choices // max(round(total_height / dynamic_choice_batch_size), 1) + 1)
                 else:
                     step_length = min(num_choices, fixed_choice_batch_size)
-                logger.info(f"batch size: {step_length}")
-                logger.info('-' * 10)
+                #logger.info(f"batch size: {step_length}")
+                #logger.info('-' * 10)
 
                 total_width = session_control.active_page.viewport_size["width"]
                 log_task = "You are asked to complete the following task: " + confirmed_task
@@ -417,8 +420,8 @@ async def main(config, base_dir) -> None:
                 got_one_answer = False
 
                 for multichoice_i in range(0, num_choices, step_length):
-                    logger.info("-" * 10)
-                    logger.info(f"Start Multi-Choice QA - Batch {multichoice_i // step_length}")
+                #    logger.info("-" * 10)
+                 #   logger.info(f"Start Multi-Choice QA - Batch {multichoice_i // step_length}")
                     input_image_path = os.path.join(main_result_path, 'image_inputs',
                                                     f'{time_step}_{multichoice_i // step_length}_crop.jpg')
 
@@ -460,6 +463,7 @@ async def main(config, base_dir) -> None:
                     # Format prompts for LLM inference
                     prompt = generate_prompt(task=confirmed_task, previous=taken_actions, choices=choices,
                                              experiment_split="SeeAct")
+                    
                     if dev_mode:
                         for prompt_i in prompt:
                             logger.info(prompt_i)
@@ -472,9 +476,11 @@ async def main(config, base_dir) -> None:
 
                     # logger.info(output0)
 
+                    file1 = open(os.path.join(main_result_path, 'currentStatus.txt'),"w")#write mode
                     for line in output0.split('\n'):
                         logger.info(line)
-
+                        file1.write(line + "\n")
+                    file1.close()
                     terminal_width = 10
                     logger.info("-" * (terminal_width))
 
@@ -482,15 +488,15 @@ async def main(config, base_dir) -> None:
                         choices)
                     choice_text = choice_text.replace("\n\n", "")
 
-                    for line in choice_text.split('\n'):
-                        logger.info(line)
+                  #  for line in choice_text.split('\n'):
+                   #     logger.info(line)
                     # logger.info(choice_text)
 
                     output = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=1,
                                                        ouput__0=output0)
 
                     terminal_width = 10
-                    logger.info("-" * terminal_width)
+                    #logger.info("-" * terminal_width)
                     logger.info("🤖Grounding Output🤖")
 
                     for line in output.split('\n'):

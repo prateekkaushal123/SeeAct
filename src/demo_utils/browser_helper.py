@@ -142,7 +142,7 @@ async def normal_launch_async(playwright: Playwright,trace_dir=None):
 
 def normal_launch(playwright: Playwright):
     browser = playwright.chromium.launch(
-        headless=True,
+        headless=False,
         args=['--incognito',
               "--disable-blink-features=AutomationControlled",
               ],
@@ -167,7 +167,7 @@ async def normal_new_context_async(
         viewport: dict = {"width": 1280, "height": 720},
 ):
     city = random.choice(list_us_cities)
-    browser = await playwright.chromium.connect_over_cdp('ws://0.0.0.0:9222/devtools/browser/93b74441-6947-4b57-a64a-60b0b3270279')
+    browser = await playwright.chromium.connect_over_cdp('ws://0.0.0.0:9222/devtools/browser/ebc0a6c5-10f7-4826-9620-9ab9348b255d')
     context = browser.contexts[0]
     '''
     context = await browser.new_context(
@@ -202,7 +202,7 @@ def normal_new_context(
 def persistent_launch(playwright: Playwright, user_data_dir: str = ""):
     context = playwright.chromium.launch_persistent_context(
         user_data_dir=user_data_dir,
-        headless=False,
+        headless=True,
         args=["--no-default-browser-check",
               "--no_sandbox",
               "--disable-blink-features=AutomationControlled",
