@@ -31,6 +31,7 @@ import toml
 import torch
 from aioconsole import ainput, aprint
 from playwright.async_api import async_playwright
+from line_profiler import LineProfiler
 
 from data_utils.format_prompt_utils import get_index_from_option_name
 from data_utils.prompts import generate_prompt, format_options
@@ -40,7 +41,6 @@ from demo_utils.format_prompt import format_choices, format_ranking_input, postp
 from demo_utils.inference_engine import OpenaiEngine
 from demo_utils.ranking_model import CrossEncoder, find_topk
 from demo_utils.website_dict import website_dict
-from line_profiler import LineProfiler
 from typing import Any
 
 # Remove Huggingface internal warnings
@@ -118,7 +118,7 @@ async def page_on_open_handler(page):
     page.on("close", page_on_close_handler)
     page.on("crash", page_on_crash_handler)
     session_control.active_page = page
-    await page.set_viewport_size({"width": config_viewport_size["width"], "height": config_viewport_size["height"]})
+    await page.set_viewport_size({"width": config_viewport_size["width"], "height": config_viewport_size["height"]});
     # print("The active tab is set to: ", page.url)
     # print("All pages:")
     # print('-'*10)
@@ -163,12 +163,6 @@ async def main(config, base_dir) -> None:
     except:
         storage_state = None
 
-    # openai settings
-    openai_config = config["openai"]
-    if openai_config["api_key"] == "Your API Key Here":
-        raise Exception(
-            f"Please set your GPT API key first. (in {os.path.join(base_dir, 'config', 'demo_mode.toml')} by default)")
-
     # playwright settings
     save_video = config["playwright"]["save_video"]
     viewport_size = config["playwright"]["viewport"]
@@ -188,11 +182,13 @@ async def main(config, base_dir) -> None:
     trace_snapshots = config["playwright"]["trace"]["snapshots"]
     trace_sources = config["playwright"]["trace"]["sources"]
 
+    # openai settings
     openai_config = config["openai"]
     # Initialize Inference Engine based on OpenAI API
     generation_model = OpenaiEngine(**openai_config, )
     if openai_config["api_key"] == "Your API Key Here":
-        raise Exception("No open ai key")
+        raise Exception(
+            f"Please set your GPT API key first. (in {os.path.join(base_dir, 'config', 'demo_mode.toml')} by default)")
 
     # Load ranking model for prune candidate elements
     ranking_model = None
@@ -257,7 +253,7 @@ async def main(config, base_dir) -> None:
 
         logger.info(f"website: {confirmed_website_url}")
         logger.info(f"task: {confirmed_task}")
-        #logger.info(f"id: {task_id}")
+        logger.info(f"id: {task_id}")
         async with async_playwright() as playwright:
             session_control.browser = await normal_launch_async(playwright)
             session_control.context = await normal_new_context_async(playwright, session_control.browser,
@@ -276,11 +272,12 @@ async def main(config, base_dir) -> None:
                 await session_control.active_page.goto(confirmed_website_url, wait_until="load")
             except Exception as e:
                 logger.info("Failed to fully load the webpage before timeout")
-                #logger.info(e)
+                logger.info(e)
             await asyncio.sleep(3)
 
             taken_actions = []
             browser_operation_history = []
+
             complete_flag = False
             monitor_signal = ""
             time_step = 0
@@ -293,27 +290,42 @@ async def main(config, base_dir) -> None:
                 browser_operation_for_input = generation_model.get_browser_operations(capability, confirmed_task)
                 print(f"\nBrowser Operation: \n{browser_operation_for_input}\n")
 
+            '''
+            action_history = [
+                "[a] Gmail -> CLICK"
+            ]
+
+            for action in action_history:
+                element_selector, action = action.split(" -> ")
+                css_selector = generation_model.generate_css_selector()
+                # Split the action into action_type and action_value (if applicable)
+                action_parts = action.split(": ")
+                action_type = action_parts[0].lower()
+                action_value = action_parts[1] if len(action_parts) > 1 else None
+                await session_control.active_page.wait_for_selector(css_selector)
+                session_control.active_page.
+
+            return
+            '''
+        
             index = 0
             while not complete_flag:
                 if dev_mode:
                     logger.info(f"Page at the start: {session_control.active_page}")
                 await session_control.active_page.bring_to_front()
                 terminal_width = 10
-                #logger.info("=" * terminal_width)
-                #logger.info(f"Time step: {time_step}")
-                #logger.info('-' * 10)
+                logger.info("=" * terminal_width)
+                logger.info(f"Time step: {time_step}")
+                logger.info('-' * 10)
                 elements = await get_interactive_elements_with_playwright(session_control.active_page)
 
                 if tracing:
                     await session_control.context.tracing.start_chunk(title=f'{task_id}-Time Step-{time_step}',
                                                                       name=f"{time_step}")
-                '''
                 logger.info(f"# all elements: {len(elements)}")
                 if dev_mode:
                     for i in elements:
                         logger.info(i[1:])
-                '''
-                
                 time_step += 1
 
                 if len(elements) == 0:
@@ -341,11 +353,11 @@ async def main(config, base_dir) -> None:
                         logger.info(action)
                     logger.info("")
                     if tracing:
-                        #logger.info("Save playwright trace file ")
+                        logger.info("Save playwright trace file ")
                         await session_control.context.tracing.stop_chunk(
                             path=f"{os.path.join(main_result_path, 'playwright_traces', f'{time_step}.zip')}")
 
-                    #logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
+                    logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
                     success_or_not = ""
                     if valid_op_count == 0:
                         success_or_not = "0"
@@ -361,7 +373,7 @@ async def main(config, base_dir) -> None:
                     # if monitor:
                     #     logger.info("Wait for human inspection. Directly press Enter to exit")
                     #     monitor_input = await ainput()
-                    #logger.info("Close browser context")
+                    logger.info("Close browser context")
                     logger.removeHandler(log_fh)
                     logger.removeHandler(console_handler)
 
@@ -372,7 +384,7 @@ async def main(config, base_dir) -> None:
                     continue
                 if ranker_path and len(elements) > top_k:
                     ranking_input = format_ranking_input(elements, confirmed_task, taken_actions)
-                    #logger.info("Start to rank")
+                    logger.info("Start to rank")
                     pred_scores = ranking_model.predict(ranking_input, convert_to_numpy=True, show_progress_bar=False,
                                                         batch_size=100, )
                     topk_values, topk_indices = find_topk(pred_scores, k=min(top_k, len(elements)))
@@ -392,8 +404,8 @@ async def main(config, base_dir) -> None:
 
                 all_candidate_ids = [element_id[0] for element_id in all_candidate_ids_with_location]
                 num_choices = len(all_candidate_ids)
-                #if ranker_path:
-                    #logger.info(f"# element candidates: {num_choices}")
+                if ranker_path:
+                    logger.info(f"# element candidates: {num_choices}")
 
                 total_height = await session_control.active_page.evaluate('''() => {
                                                                 return Math.max(
@@ -407,8 +419,8 @@ async def main(config, base_dir) -> None:
                                       num_choices // max(round(total_height / dynamic_choice_batch_size), 1) + 1)
                 else:
                     step_length = min(num_choices, fixed_choice_batch_size)
-                #logger.info(f"batch size: {step_length}")
-                #logger.info('-' * 10)
+                logger.info(f"batch size: {step_length}")
+                logger.info('-' * 10)
 
                 total_width = session_control.active_page.viewport_size["width"]
                 log_task = "You are asked to complete the following task: " + confirmed_task
@@ -434,8 +446,8 @@ async def main(config, base_dir) -> None:
                 got_one_answer = False
 
                 for multichoice_i in range(0, num_choices, step_length):
-                #    logger.info("-" * 10)
-                 #   logger.info(f"Start Multi-Choice QA - Batch {multichoice_i // step_length}")
+                    logger.info("-" * 10)
+                    logger.info(f"Start Multi-Choice QA - Batch {multichoice_i // step_length}")
                     input_image_path = os.path.join(main_result_path, 'image_inputs',
                                                     f'{time_step}_{multichoice_i // step_length}_crop.jpg')
 
@@ -459,6 +471,7 @@ async def main(config, base_dir) -> None:
                         logger.info(total_height)
                         logger.info(clip)
 
+                    
                     try:
                         await session_control.active_page.screenshot(path=input_image_path, clip=clip, full_page=True,
                                                                      type='jpeg', quality=100, timeout=20000)
@@ -474,14 +487,16 @@ async def main(config, base_dir) -> None:
                     candidate_ids = all_candidate_ids[multichoice_i:multichoice_i + step_length]
                     choices = format_choices(elements, candidate_ids, confirmed_task, taken_actions)
                     query_count += 1
-                    if capability == None:
+
+                    if (capability == None):
+                        # Format prompts for LLM inference
                         prompt = generate_prompt(task=confirmed_task, previous=taken_actions, choices=choices,
-                                             experiment_split="SeeAct")
+                                                experiment_split="SeeAct")
                         if dev_mode:
                             for prompt_i in prompt:
                                 logger.info(prompt_i)
-                        output0 = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=0)
 
+                        output0 = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=0)
 
                         terminal_width = 10
                         logger.info("-" * terminal_width)
@@ -489,11 +504,9 @@ async def main(config, base_dir) -> None:
 
                         # logger.info(output0)
 
-                        file1 = open(os.path.join(main_result_path, 'currentStatus.txt'),"w")#write mode
                         for line in output0.split('\n'):
                             logger.info(line)
-                            file1.write(line + "\n")
-                        file1.close()
+
                         terminal_width = 10
                         logger.info("-" * (terminal_width))
 
@@ -501,21 +514,24 @@ async def main(config, base_dir) -> None:
                             choices)
                         choice_text = choice_text.replace("\n\n", "")
 
+                        for line in choice_text.split('\n'):
+                            logger.info(line)
+                        # logger.info(choice_text)
+
+                        
                         output = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=1,
-                                                       ouput__0=output0)
+                                                        ouput__0=output0)
+                        
                         print(output)
-                    else :
-                        print(len(browser_operation_for_input))
-                        print(index)
-                        print(browser_operation_for_input)
+                    else:
                         if (index < len(browser_operation_for_input)):
-                            output = browser_operation_for_input[index]
+                            output = browser_operation_for_input[index];
                             index += 1
-                        else :
-                            raise Exception(f"the agent reached the step limit {index}")
+                        else:
+                            raise Exception(f"the agent reached the step limit {index}.")
 
                     terminal_width = 10
-                    #logger.info("-" * terminal_width)
+                    logger.info("-" * terminal_width)
                     logger.info("🤖Grounding Output🤖")
 
                     for line in output.split('\n'):
@@ -602,8 +618,8 @@ async def main(config, base_dir) -> None:
                         else:
                             if not target_element in ["PRESS ENTER", "TERMINATE"]:
                                 selector = target_element[-2]
-                                if dev_mode:
-                                    logger.info(target_element)
+                                print(f"\Target Element: {target_element}\n")
+                                print(f"\nSelector:  {selector}\n")
                                 try:
                                     await selector.scroll_into_view_if_needed(timeout=3000)
                                     if highlight:
@@ -823,8 +839,9 @@ async def main(config, base_dir) -> None:
                         if monitor_signal not in ["pause", "reject"]:
                             no_op_count += 1
                     taken_actions.append(new_action)
-                    if (capability == None) :
+                    if (capability == None):
                         browser_operation_history.append(output)
+
                     if not session_control.context.pages:
                         await session_control.context.new_page()
                         try:
@@ -856,6 +873,7 @@ async def main(config, base_dir) -> None:
                         logger.info("Save playwright trace file")
                         await session_control.context.tracing.stop_chunk(
                             path=f"{os.path.join(main_result_path, 'playwright_traces', f'{time_step}.zip')}")
+
                 except Exception as e:
                     logger.info("=" * 10)
                     logger.info(f"Decide to terminate because {e}")
@@ -873,17 +891,18 @@ async def main(config, base_dir) -> None:
                     success_or_not = ""
                     if valid_op_count == 0:
                         success_or_not = "0"
+                      
                     logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
                     final_json = {"confirmed_task": confirmed_task, "website": confirmed_website,
                                   "task_id": task_id, "success_or_not": success_or_not,
-                                  "num_step": len(taken_actions), "action_history": taken_actions, "browser_operation_history": browser_operation_history,"exit_by": str(e)}
-
+                                  "num_step": len(taken_actions), "action_history": taken_actions, "browser_operation_history": browser_operation_history, "exit_by": str(e)}
+                    
                     with open(os.path.join(main_result_path, 'result.json'), 'w', encoding='utf-8') as file:
                         json.dump(final_json, file, indent=4)
 
                     if valid_op_count != 0 and capability == None:
                         browser_operation_history.append(output)
-                        record_task_history(generation_model, confirmed_task, taken_actions, browser_operation_history)
+                        record_task_history(generation_model,confirmed_task, taken_actions, browser_operation_history)
 
                     if monitor:
                         logger.info("Wait for human inspection. Directly press Enter to exit")
@@ -898,33 +917,41 @@ async def main(config, base_dir) -> None:
 
                     complete_flag = True
 
-
 def record_task_history(generation_model, user_task, action_history, browser_operation_history):
+
     prompt_text = f"User Task: {user_task}\n\nSteps Taken:\n"
     for step in action_history:
         prompt_text += f"- {step}\n"
-    
+
     prompt_text += "\nUser Task Completed\n\nBased on above data. Generate the following information as json. \nkey: capability_information: value: Describe consicely what capability can be infered and not what it did not performed\nkey: capability_key: value: generate a json key to represent the capability from capability_information"
+
     capability_json = generation_model.convert_completed_user_task_to_capability(prompt_text)
+
+    # Load existing data from the JSON file
     try:
         with open("task_history.json", "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         data = {"capability": {}}
-    
-    key = capability_json["capability_key"]
+
+     # Update the data with the new task history
+    key = capability_json["capability_key"];
     if capability_json["capability_key"] not in data["capability"]:
         data["capability"][key] = {}
 
     if "confirmed_task" not in data["capability"][key]:
         data["capability"][key]["confirmed_task"] = []
-
+    
     data["capability"][key]["confirmed_task"].append(user_task)
-    data["capability"][key]["description"] = capability_json["capability_information"]
-    data["capability"][key]["action_history"] = action_history
+    data["capability"][key]["description"] = capability_json["capability_information"];
+    data["capability"][key]["action_history"] = action_history;
     data["capability"][key]["browser_operation_history"] = browser_operation_history;
+
+    # Write the updated data back to the JSON file
     with open("task_history.json", "w") as f:
         json.dump(data, f, indent=4)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
