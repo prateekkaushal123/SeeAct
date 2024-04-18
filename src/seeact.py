@@ -513,6 +513,17 @@ async def main(config, base_dir) -> None:
                         print(browser_operation_for_input)
                         if (index < len(browser_operation_for_input)):
                             output = browser_operation_for_input[index]
+                            if index == len(browser_operation_for_input)-1 :
+                                prompt = generate_prompt(task=confirmed_task, previous=taken_actions, choices=choices,
+                                             experiment_split="SeeAct")
+                                output0 = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=0)
+                                print(output0)
+                                file1 = open(os.path.join(main_result_path, 'currentStatus.txt'),"w")#write mode
+                                for line in output0.split('\n'):
+                                    logger.info(line)
+                                    file1.write(line + "\n")
+                                file1.close()
+                            
                             index += 1
                         else :
                             raise Exception(f"the agent reached the step limit {index}")
