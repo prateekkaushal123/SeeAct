@@ -24,6 +24,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import warnings
 from dataclasses import dataclass
 
@@ -291,6 +292,8 @@ async def main(config, base_dir) -> None:
             browser_operation_for_input = None
             if (capability != None):
                 browser_operation_for_input = generation_model.get_browser_operations(capability, confirmed_task)
+                if len(browser_operation_for_input) == 1:
+                    browser_operation_for_input = re.split("\(Reiteration\)", browser_operation_for_input[0])
                 print(f"\nBrowser Operation: \n{browser_operation_for_input}\n")
 
             index = 0
