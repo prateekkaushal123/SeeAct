@@ -40,6 +40,8 @@ from demo_utils.format_prompt import format_choices, format_ranking_input, postp
 from demo_utils.inference_engine import OpenaiEngine
 from demo_utils.ranking_model import CrossEncoder, find_topk
 from demo_utils.website_dict import website_dict
+from line_profiler import LineProfiler
+from typing import Any
 
 # Remove Huggingface internal warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -124,6 +126,7 @@ async def page_on_open_handler(page):
     # print("active page: ",session_control.active_page)
     # print('-' * 10)
 
+browser_operation_history = []
 
 async def main(config, base_dir) -> None:
     # basic settings
@@ -185,8 +188,11 @@ async def main(config, base_dir) -> None:
     trace_snapshots = config["playwright"]["trace"]["snapshots"]
     trace_sources = config["playwright"]["trace"]["sources"]
 
+    openai_config = config["openai"]
     # Initialize Inference Engine based on OpenAI API
     generation_model = OpenaiEngine(**openai_config, )
+    if openai_config["api_key"] == "Your API Key Here":
+        raise Exception("No open ai key")
 
     # Load ranking model for prune candidate elements
     ranking_model = None
@@ -274,12 +280,20 @@ async def main(config, base_dir) -> None:
             await asyncio.sleep(3)
 
             taken_actions = []
+            browser_operation_history = []
             complete_flag = False
             monitor_signal = ""
             time_step = 0
             no_op_count = 0
             valid_op_count = 0
 
+            capability = generation_model.find_relevant_capability(confirmed_task)
+            browser_operation_for_input = None
+            if (capability != None):
+                browser_operation_for_input = generation_model.get_browser_operations(capability, confirmed_task)
+                print(f"\nBrowser Operation: \n{browser_operation_for_input}\n")
+
+            index = 0
             while not complete_flag:
                 if dev_mode:
                     logger.info(f"Page at the start: {session_control.active_page}")
@@ -405,7 +419,7 @@ async def main(config, base_dir) -> None:
                 if previous_actions is None or previous_actions == []:
                     previous_actions = ["None"]
                 for action_text in previous_actions:
-                    previous_action_text += action_text
+                    previous_action_text += str(action_text)
                     previous_action_text += "\n"
 
                 log_previous_actions = previous_action_text
@@ -460,40 +474,45 @@ async def main(config, base_dir) -> None:
                     candidate_ids = all_candidate_ids[multichoice_i:multichoice_i + step_length]
                     choices = format_choices(elements, candidate_ids, confirmed_task, taken_actions)
                     query_count += 1
-                    # Format prompts for LLM inference
-                    prompt = generate_prompt(task=confirmed_task, previous=taken_actions, choices=choices,
+                    if capability == None:
+                        prompt = generate_prompt(task=confirmed_task, previous=taken_actions, choices=choices,
                                              experiment_split="SeeAct")
-                    
-                    if dev_mode:
-                        for prompt_i in prompt:
-                            logger.info(prompt_i)
+                        if dev_mode:
+                            for prompt_i in prompt:
+                                logger.info(prompt_i)
+                        output0 = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=0)
 
-                    output0 = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=0)
 
-                    terminal_width = 10
-                    logger.info("-" * terminal_width)
-                    logger.info("🤖Action Generation Output🤖")
+                        terminal_width = 10
+                        logger.info("-" * terminal_width)
+                        logger.info("🤖Action Generation Output🤖")
 
-                    # logger.info(output0)
+                        # logger.info(output0)
 
-                    file1 = open(os.path.join(main_result_path, 'currentStatus.txt'),"w")#write mode
-                    for line in output0.split('\n'):
-                        logger.info(line)
-                        file1.write(line + "\n")
-                    file1.close()
-                    terminal_width = 10
-                    logger.info("-" * (terminal_width))
+                        file1 = open(os.path.join(main_result_path, 'currentStatus.txt'),"w")#write mode
+                        for line in output0.split('\n'):
+                            logger.info(line)
+                            file1.write(line + "\n")
+                        file1.close()
+                        terminal_width = 10
+                        logger.info("-" * (terminal_width))
 
-                    choice_text = f"(Multichoice Question) - Batch {multichoice_i // step_length}" + "\n" + format_options(
-                        choices)
-                    choice_text = choice_text.replace("\n\n", "")
+                        choice_text = f"(Multichoice Question) - Batch {multichoice_i // step_length}" + "\n" + format_options(
+                            choices)
+                        choice_text = choice_text.replace("\n\n", "")
 
-                  #  for line in choice_text.split('\n'):
-                   #     logger.info(line)
-                    # logger.info(choice_text)
-
-                    output = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=1,
+                        output = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=1,
                                                        ouput__0=output0)
+                        print(output)
+                    else :
+                        print(len(browser_operation_for_input))
+                        print(index)
+                        print(browser_operation_for_input)
+                        if (index < len(browser_operation_for_input)):
+                            output = browser_operation_for_input[index]
+                            index += 1
+                        else :
+                            raise Exception(f"the agent reached the step limit {index}")
 
                     terminal_width = 10
                     #logger.info("-" * terminal_width)
@@ -539,7 +558,7 @@ async def main(config, base_dir) -> None:
                     terminal_width = 10
                     logger.info("-" * terminal_width)
                     logger.info("🤖Browser Operation🤖")
-                    logger.info(f"Target Element: {target_element_text}", )
+                    logger.info(f"Target Element: {target_element}", )
                     logger.info(f"Target Action: {target_action}", )
                     logger.info(f"Target Value: {target_value}", )
 
@@ -804,6 +823,8 @@ async def main(config, base_dir) -> None:
                         if monitor_signal not in ["pause", "reject"]:
                             no_op_count += 1
                     taken_actions.append(new_action)
+                    if (capability == None) :
+                        browser_operation_history.append(output)
                     if not session_control.context.pages:
                         await session_control.context.new_page()
                         try:
@@ -855,10 +876,14 @@ async def main(config, base_dir) -> None:
                     logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
                     final_json = {"confirmed_task": confirmed_task, "website": confirmed_website,
                                   "task_id": task_id, "success_or_not": success_or_not,
-                                  "num_step": len(taken_actions), "action_history": taken_actions, "exit_by": str(e)}
+                                  "num_step": len(taken_actions), "action_history": taken_actions, "browser_operation_history": browser_operation_history,"exit_by": str(e)}
 
                     with open(os.path.join(main_result_path, 'result.json'), 'w', encoding='utf-8') as file:
                         json.dump(final_json, file, indent=4)
+
+                    if valid_op_count != 0 and capability == None:
+                        browser_operation_history.append(output)
+                        record_task_history(generation_model, confirmed_task, taken_actions, browser_operation_history)
 
                     if monitor:
                         logger.info("Wait for human inspection. Directly press Enter to exit")
@@ -873,6 +898,33 @@ async def main(config, base_dir) -> None:
 
                     complete_flag = True
 
+
+def record_task_history(generation_model, user_task, action_history, browser_operation_history):
+    prompt_text = f"User Task: {user_task}\n\nSteps Taken:\n"
+    for step in action_history:
+        prompt_text += f"- {step}\n"
+    
+    prompt_text += "\nUser Task Completed\n\nBased on above data. Generate the following information as json. \nkey: capability_information: value: Describe consicely what capability can be infered and not what it did not performed\nkey: capability_key: value: generate a json key to represent the capability from capability_information"
+    capability_json = generation_model.convert_completed_user_task_to_capability(prompt_text)
+    try:
+        with open("task_history.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {"capability": {}}
+    
+    key = capability_json["capability_key"]
+    if capability_json["capability_key"] not in data["capability"]:
+        data["capability"][key] = {}
+
+    if "confirmed_task" not in data["capability"][key]:
+        data["capability"][key]["confirmed_task"] = []
+
+    data["capability"][key]["confirmed_task"].append(user_task)
+    data["capability"][key]["description"] = capability_json["capability_information"]
+    data["capability"][key]["action_history"] = action_history
+    data["capability"][key]["browser_operation_history"] = browser_operation_history;
+    with open("task_history.json", "w") as f:
+        json.dump(data, f, indent=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
