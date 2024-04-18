@@ -165,7 +165,7 @@ ELEMENT TEXT: Please provide the exact text displayed on the element. Do not inv
 
 ##### SeeAct Online Prompts
 
-seeact_online_sys_prompt = '''Imagine that you are imitating humans doing web navigation for a task step by step. At each stage, you can see the webpage like humans by a screenshot and know the previous actions before the current step decided by yourself through recorded history. You need to decide on the first following action to take. You can click on an element with the mouse, select an option, type text or press Enter with the keyboard. (For your understanding, they are like the click(), select_option() type() and keyboard.press('Enter') functions in playwright respectively) One next step means one operation within the four. Unlike humans, for typing (e.g., in text areas, text boxes) and selecting (e.g., from dropdown menus or <select> elements), you should try directly typing the input or selecting the choice, bypassing the need for an initial click. You should not attempt to create accounts, log in or do the final submission. Terminate when you deem the task complete or if it requires potentially harmful actions.'''
+seeact_online_sys_prompt = '''Imagine that you are helping a blind human by doing web navigation and completing the task asked step by step. The aim is to get answer or complete action requested by human. Consider human is blind and cannot see webpage. At each stage, you can see the webpage like humans by a screenshot and know the previous actions before the current step decided by yourself through recorded history. You need to decide on the first following action to take. You can click on an element with the mouse, select an option, type text or press Enter with the keyboard. (For your understanding, they are like the click(), select_option() type() and keyboard.press('Enter') functions in playwright respectively) One next step means one operation within the four. Unlike humans, for typing (e.g., in text areas, text boxes) and selecting (e.g., from dropdown menus or <select> elements), you should try directly typing the input or selecting the choice, bypassing the need for an initial click. You should not attempt to create accounts, log in or do the final submission. Terminate when you deem the task complete or if it requires potentially harmful actions.'''
 
 seeact_online_question_description_new_exp4 = '''The screenshot below shows the webpage you see. Follow the following guidance to think step by step before outlining the next action step at the current stage:
 
@@ -178,13 +178,21 @@ Secondly, combined with the screenshot, analyze each step of the previous action
 (Screenshot Details Analysis)
 Closely examine the screenshot to check the status of every part of the webpage to understand what you can operate with and what has been set or completed. You should closely examine the screenshot details to see what steps have been completed by previous actions even though you are given the textual previous actions. Because the textual history may not clearly and sufficiently record some effects of previous actions, you should closely evaluate the status of every part of the webpage to understand what you have done.
 
+
 (Next Action Based on Webpage and Analysis)
 Then, based on your analysis, in conjunction with human web browsing habits and the logic of web design, decide on the following action. And clearly outline which element in the webpage users will operate with as the first next target element, its detailed location, and the corresponding operation.
 
 To be successful, it is important to follow the following rules: 
-1. You should only issue a valid action given the current observation. 
-2. You should only issue one action at a time
-3. For handling the select dropdown elements on the webpage, it's not necessary for you to provide completely accurate options right now. The full list of options for these elements will be supplied later.
+1. You should understand if the human task is an action they want to accompalish or get summarized information from web page
+2. For Information kind of queries, You should examine first if the data/text shown in screenshot completes the given task or not
+    2.a If there are links which can give more information to answer the human question, ignore them if enough information is already captured in the screenshot.
+    2.b For these queries, return as much data as possible to provide user with all information presented on web page which would answer the query
+    2.c As human is blind, return the detailed summary of answer that can be then played via Text to Speech software. Send this summary inside regular expression ```summary\n(.*)``` in `Screenshot Details Analysis` section. Dont mention that we are operating on a webpage in summary. Keep the summary within 120 words.
+3. For human task which is an action, bias more towards completing action
+4. You should only issue a valid action given the current observation. 
+5. You should only issue one action at a time
+6. For handling the select dropdown elements on the webpage, it's not necessary for you to provide completely accurate options right now. The full list of options for these elements will be supplied later.
+7. Given user is blind give adequate summary or result of the action that can be then played via Text to Speech software
 
 (Final Status)
 Based on  above analysis, provide a human answer whether given task is complete or not.

@@ -164,10 +164,10 @@ async def normal_new_context_async(
         locale=None,
         geolocation=None,
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-        viewport: dict = {"width": 1280, "height": 720},
+        viewport: dict = {"width": 1920, "height": 1080},
 ):
     city = random.choice(list_us_cities)
-    browser = await playwright.chromium.connect_over_cdp('ws://0.0.0.0:9222/devtools/browser/ebc0a6c5-10f7-4826-9620-9ab9348b255d')
+    browser = await playwright.chromium.connect_over_cdp('ws://127.0.0.1:9222/devtools/browser/161fb2b2-a4b7-4494-88fa-9d28a1ff7271')
     context = browser.contexts[0]
     '''
     context = await browser.new_context(
@@ -190,7 +190,7 @@ def normal_new_context(
         browser,
         storage_state=None,
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-        viewport: dict = {"width": 1280, "height": 720},
+        viewport: dict = {"width": 1920, "height": 1080},
 ):
     return browser.new_context(
         storage_state=storage_state,
@@ -209,7 +209,7 @@ def persistent_launch(playwright: Playwright, user_data_dir: str = ""):
               ],
         ignore_default_args=ignore_args,
         user_agent="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-        viewport={"width": 1280, "height": 720},
+        viewport={"width": 1920, "height": 1080},
         bypass_csp=True,
         slow_mo=1000,
         chromium_sandbox=True,

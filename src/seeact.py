@@ -48,7 +48,7 @@ from typing import Any
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore", category=UserWarning)
 
-config_viewport_size = {"width": 1280, "height": 720}
+config_viewport_size = {"width": 1920, "height": 1080}
 
 
 @dataclass
@@ -802,9 +802,11 @@ async def main(config, base_dir) -> None:
                                 try:
                                     logger.info("Try performing a PRESS ENTER")
                                     await selector.press('Enter')
+                                    await session_control.active_page.wait_for_timeout(3000)
                                 except Exception as e:
                                     await selector.click(timeout=10000)
                                     await session_control.active_page.keyboard.press('Enter')
+                                    await session_control.active_page.wait_for_timeout(3000)
                         elif monitor_signal == "pause":
                             logger.info(
                                 "Pause for human intervention. Press Enter to continue. You can also enter your message here, which will be included in the action history as a human message.")
