@@ -171,18 +171,6 @@ class OpenaiEngine(Engine):
         print(capability_string)
         return json.loads(capability_string)
     
-    def get_website_url_best_suited_to_complete_user_task(self, user_task):
-        openai.api_key = self.api_keys[self.current_key_idx]
-        prompt = f"For the user task: {user_task}\n. Return only the website url best suited to perform the action. Note: \n1. if the task is related to gathering information, from website that does not require sign in, use https://www.perplexity.ai website\n1. Dont return any other text\n2. If the website cannot be 100% determined, default to using https://www.google.com"
-        response = openai.ChatCompletion.create(model="gpt-4-turbo",
-                                                messages=[{"role": "user", "content": prompt}],max_tokens=1024)
-        
-        print(response)
-        website_url = response.choices[0].message.content;
-        print(f"Returned WebSite URL: {website_url}");
-        return website_url
-    
-    
     def get_playwright_action_from_history(self, prompt_text):
         openai.api_key = self.api_keys[self.current_key_idx]
         response = openai.ChatCompletion.create(model="gpt-3.5-turbo-1106",messages=[{"role": "user", "content": prompt_text}],max_tokens=1024)

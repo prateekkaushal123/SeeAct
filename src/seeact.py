@@ -214,13 +214,13 @@ async def main(config, base_dir) -> None:
         task_dict["confirmed_task"] = task_input
         website_input = await ainput(
             f"Please input the complete URL of the starting website, and press Enter. The URL must be complete (for example, including http), to ensure the browser can successfully load the webpage. \nOr directly press Enter to use the default website: {default_website}\nWebsite: ")
+        if not website_input:
+            website_input = default_website
+        task_dict["website"] = website_input
         # set the folder name as current time
         current_time = datetime.datetime.now()
         file_name = current_time.strftime("%Y-%m-%d_%H-%M-%S")
-        if not website_input:
-            website_input = generation_model.get_website_url_best_suited_to_complete_user_task(task_input)
         task_dict["task_id"] = file_name
-        task_dict["website"] = website_input
         query_tasks.append(task_dict)
         useHistory = True
 
