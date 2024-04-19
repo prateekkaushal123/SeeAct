@@ -43,7 +43,7 @@ To be successful, it is important to follow the following rules:
 2. You should only issue one action at a time
 
 (Final Status)
-Based on  above analysis, provide a human answer whether given task is complete or not.
+Based on  above analysis, provide a one word answer in yes or no format stating whether action is successfully completed or not.
 
 (Description)
 If the task is asking for information, provide a summary of the details which could be seen on the page and is relevant. If the task is not asking for information, tell Not applicable.
@@ -86,7 +86,7 @@ To be successful, it is important to follow the following rules:
 2. You should only issue one action at a time.
 
 (Final Status)
-Based on  above analysis, provide a human answer whether given task is complete or not.
+Based on  above analysis, provide a one word answer in yes or no format stating whether action is successfully completed or not.
 
 (Description)
 If the task is asking for information, provide a summary of the details which could be seen on the page and is relevant. If the task is not asking for information, tell Not applicable.'''
@@ -195,7 +195,7 @@ To be successful, it is important to follow the following rules:
 7. Given user is blind give adequate summary or result of the action that can be then played via Text to Speech software
 
 (Final Status)
-Based on  above analysis, provide a human answer whether given task is complete or not.
+Based on  above analysis, provide a one word answer in yes or no format stating whether action is successfully completed or not.
 
 (Description)
 If the task is asking for information, provide a summary of the details which could be seen on the page and is relevant. If the task is not asking for information, tell Not applicable.'''

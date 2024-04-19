@@ -497,8 +497,16 @@ async def main(config, base_dir) -> None:
                         # logger.info(output0)
 
                         file1 = open(os.path.join(main_result_path, 'currentStatus.txt'),"w")#write mode
+                        flag = 0
                         for line in output0.split('\n'):
                             logger.info(line)
+                            if flag == 1:
+                                flag = 0
+                                if line.lower() == "yes":
+                                    success_or_not = "1"
+                                    print("Task success status: " + success_or_not)
+                            if line == "(Final Status)":
+                                flag = 1
                             file1.write(line + "\n")
                         file1.close()
                         terminal_width = 10
@@ -522,9 +530,17 @@ async def main(config, base_dir) -> None:
                                              experiment_split="SeeAct")
                                 output0 = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=0)
                                 print(output0)
+                                flag = 0
                                 file1 = open(os.path.join(main_result_path, 'currentStatus.txt'),"w")#write mode
                                 for line in output0.split('\n'):
                                     logger.info(line)
+                                    if flag == 1:
+                                        flag = 0
+                                        if line.lower() == "yes":
+                                            success_or_not = "1"
+                                            print("Task success status: " + success_or_not)
+                                    if line == "(Final Status)":
+                                        flag = 1
                                     file1.write(line + "\n")
                                 file1.close()
                             
