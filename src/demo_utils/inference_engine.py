@@ -97,11 +97,11 @@ class OpenaiEngine(Engine):
 
     def encode_image(self, image_path):
         with open(self, image_path, "rb") as image_file:
-            #return base64.b64encode(image_file.read()).decode('utf-8')
-            image = Image.open(image_file)
-            byte_stream = io.BytesIO()
-            image.save(byte_stream, format="JPEG", quality=80)
-            return base64.b64decode(byte_stream.getvalue()).decode('utf-8')
+            return base64.b64encode(image_file.read()).decode('utf-8')
+            #image = Image.open(image_file)
+            #byte_stream = io.BytesIO()
+            #image.save(byte_stream, format="JPEG", quality=80)
+            #return base64.b64decode(byte_stream.getvalue()).decode('utf-8')
 
     @backoff.on_exception(
         backoff.expo,
@@ -129,7 +129,7 @@ class OpenaiEngine(Engine):
                 {"role": "user",
                  "content": [{"type": "text", "text": prompt1}, {"type": "image_url", "image_url": {"url":
                                                                                                         f"data:image/jpeg;base64,{base64_image}",
-                                                                                                    "detail": "low"},
+                                                                                                    "detail": "high"},
                                                                  }]},
             ]
             response1 = openai.ChatCompletion.create(
@@ -149,7 +149,7 @@ class OpenaiEngine(Engine):
                 {"role": "user",
                  "content": [{"type": "text", "text": prompt1}, {"type": "image_url", "image_url": {"url":
                                                                                                         f"data:image/jpeg;base64,{base64_image}",
-                                                                                                    "detail": "low"}, }]},
+                                                                                                    "detail": "high"}, }]},
                 {"role": "assistant", "content": [{"type": "text", "text": f"\n\n{ouput__0}"}]},
                 {"role": "user", "content": [{"type": "text", "text": prompt2}]}, ]
             response2 = openai.ChatCompletion.create(
@@ -200,7 +200,7 @@ class OpenaiEngine(Engine):
         backoff.expo, (APIError, RateLimitError, APIConnectionError, ServiceUnavailableError, InvalidRequestError),
         )
     
-    def find_relevant_capability(self, user_input):
+    def find_relevant_capability(self, user_input, website_url):
         openai.api_key = self.api_keys[self.current_key_idx]
         try:
             with open("task_history.json", "r") as f:
@@ -209,13 +209,13 @@ class OpenaiEngine(Engine):
             print("task_history.json file not found.")
             return None
         
-        prompt = f"User Input: {user_input}\n\n"
-        prompt += "Based on the user input, find the most relevant capability from the following capabilities and their descriptions:\n\n"
+        prompt = f"User Input: {user_input} and WebSite url: {website_url}\n\n"
+        prompt += "Based on the above data, find the most relevant capability from the following capabilities and their descriptions:\n\n"
         for capability_key, capability_data in task_history["capability"].items():
             prompt += f"Capability Key: {capability_key}\n"
             prompt += f"Description: {capability_data['description']}\n\n"
             
-        prompt += "Response: Based on the user input, send the most relevant capability. If no capability found send None. Send only the key and no other text."
+        prompt += "Response: Based on the user input, send the most relevant capability. If no capability found send None. Send only the key and no other text. Capability key should have reference to website url."
         print(f"\nCapability Prompt:\n{prompt}\n")
         response = openai.ChatCompletion.create(model="gpt-3.5-turbo-1106",messages=[{"role": "user", "content": prompt}],max_tokens=1024)
         relevant_capability_key = response.choices[0].message.content

@@ -288,7 +288,7 @@ async def main(config, base_dir) -> None:
             no_op_count = 0
             valid_op_count = 0
 
-            capability = generation_model.find_relevant_capability(confirmed_task)
+            capability = generation_model.find_relevant_capability(confirmed_task, website_input)
             browser_operation_for_input = None
             if (capability != None):
                 browser_operation_for_input = generation_model.get_browser_operations(capability, confirmed_task)
@@ -892,14 +892,14 @@ async def main(config, base_dir) -> None:
                     logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
                     final_json = {"confirmed_task": confirmed_task, "website": confirmed_website,
                                   "task_id": task_id, "success_or_not": success_or_not,
-                                  "num_step": len(taken_actions), "action_history": taken_actions, "browser_operation_history": browser_operation_history,"exit_by": str(e)}
+                                  "num_step": len(taken_actions), "action_history": taken_actions, "browser_operation_history": browser_operation_history,"exit_by": str(e), "website_url": website_input}
 
                     with open(os.path.join(main_result_path, 'result.json'), 'w', encoding='utf-8') as file:
                         json.dump(final_json, file, indent=4)
 
                     if valid_op_count != 0 and capability == None:
                         browser_operation_history.append(output)
-                        record_task_history(generation_model, confirmed_task, taken_actions, browser_operation_history)
+                        record_task_history(generation_model, confirmed_task, taken_actions, browser_operation_history, website_input)
 
                     if monitor:
                         logger.info("Wait for human inspection. Directly press Enter to exit")
@@ -915,15 +915,18 @@ async def main(config, base_dir) -> None:
                     complete_flag = True
 
 
-def record_task_history(generation_model, user_task, action_history, browser_operation_history):
-    prompt_text = f"User Task: {user_task}\n\nSteps Taken:\n"
+def record_task_history(generation_model, user_task, action_history, browser_operation_history, website_input):
+    prompt_text = f"User Task: {user_task}, WebSite URL: {website_input}\n\n"
     for step in action_history:
         prompt_text += f"- {step}\n"
     
-    prompt_text += "\nUser Task Completed\n\nBased on above data. Generate the following information as json. \nkey: capability_information: value: Describe consicely what capability can be infered and not what it did not performed\nkey: capability_key: value: generate a json key to represent the capability from capability_information"
+    file_path = "task_history.json"
+
+    prompt_text += "\nBased on above data. Generate the following information as json. \nkey: capability_information: value: Hint:Describe consicely what capability can be infered. Use website name, user task information to generate the apt capability key. \nkey: capability_key: value: Hint: MUST Use website name and user input information to generate the apt capability key."
     capability_json = generation_model.convert_completed_user_task_to_capability(prompt_text)
+
     try:
-        with open("task_history.json", "r") as f:
+        with open(file_path, "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         data = {"capability": {}}
@@ -939,7 +942,7 @@ def record_task_history(generation_model, user_task, action_history, browser_ope
     data["capability"][key]["description"] = capability_json["capability_information"]
     data["capability"][key]["action_history"] = action_history
     data["capability"][key]["browser_operation_history"] = browser_operation_history;
-    with open("task_history.json", "w") as f:
+    with open(file_path, "w") as f:
         json.dump(data, f, indent=4)
 
 if __name__ == "__main__":
