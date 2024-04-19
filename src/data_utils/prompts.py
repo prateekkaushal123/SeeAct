@@ -44,9 +44,6 @@ To be successful, it is important to follow the following rules:
 
 (Final Status)
 Based on  above analysis, provide a one word answer in yes or no format stating whether action is successfully completed or not.
-
-(Description)
-If the task is asking for information, provide a summary of the details which could be seen on the page and is relevant. If the task is not asking for information, tell Not applicable.
 '''
 
 question_description_new_exp2 = '''The screenshot below shows the webpage you see. In the screenshot, some red bounding boxes and white-on-black uppercase letters at the bottom left corner of the bounding boxes have been manually added. You should ignore them for now. Follow the following guidance to think step by step before outlining the next action step at the current stage:
@@ -87,9 +84,7 @@ To be successful, it is important to follow the following rules:
 
 (Final Status)
 Based on  above analysis, provide a one word answer in yes or no format stating whether action is successfully completed or not.
-
-(Description)
-If the task is asking for information, provide a summary of the details which could be seen on the page and is relevant. If the task is not asking for information, tell Not applicable.'''
+'''
 
 exp4_prompt_dict = {
     "system_prompt": sys_prompt,
@@ -196,9 +191,7 @@ To be successful, it is important to follow the following rules:
 
 (Final Status)
 Based on  above analysis, provide a one word answer in yes or no format stating whether action is successfully completed or not.
-
-(Description)
-If the task is asking for information, provide a summary of the details which could be seen on the page and is relevant. If the task is not asking for information, tell Not applicable.'''
+'''
 
 seeact_online_action_format = "ACTION: Choose an action from {CLICK, SELECT, TYPE, PRESS ENTER, TERMINATE, NONE}."
 
