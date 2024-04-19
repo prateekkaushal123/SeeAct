@@ -222,6 +222,7 @@ async def main(config, base_dir) -> None:
         task_dict["task_id"] = file_name
         task_dict["website"] = website_input
         query_tasks.append(task_dict)
+        useHistory = True
 
     for single_query_task in query_tasks:
         confirmed_task = single_query_task["confirmed_task"]
@@ -289,6 +290,9 @@ async def main(config, base_dir) -> None:
             valid_op_count = 0
 
             capability = generation_model.find_relevant_capability(confirmed_task, website_input)
+            if useHistory == False:
+                capability = None
+                useHistory = True
             browser_operation_for_input = None
             if (capability != None):
                 browser_operation_for_input = generation_model.get_browser_operations(capability, confirmed_task)
