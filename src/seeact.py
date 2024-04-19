@@ -926,6 +926,10 @@ async def main(config, base_dir) -> None:
                         logger.info("Wait for human inspection. Directly press Enter to exit")
                         monitor_input = await ainput()
 
+                    if success_or_not != "1" and capability != None:
+                        query_tasks.append(single_query_task)
+                        useHistory = False
+                        print("Task could not be completed with caching, retrying without caching")
                     logger.info("Close browser context")
                     logger.removeHandler(log_fh)
                     logger.removeHandler(console_handler)
