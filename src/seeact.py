@@ -233,6 +233,7 @@ async def main(config, base_dir) -> None:
             confirmed_website_url = confirmed_website
         task_id = single_query_task["task_id"]
         main_result_path = os.path.join(save_file_dir, task_id)
+        success_or_not = ""
 
         if not os.path.exists(main_result_path):
             os.makedirs(main_result_path)
@@ -906,7 +907,7 @@ async def main(config, base_dir) -> None:
                         await session_control.context.tracing.stop_chunk(
                             path=f"{os.path.join(main_result_path, 'playwright_traces', f'{time_step}.zip')}")
 
-                    success_or_not = ""
+                    
                     if valid_op_count == 0:
                         success_or_not = "0"
                     logger.info(f"Write results to json file: {os.path.join(main_result_path, 'result.json')}")
@@ -919,7 +920,7 @@ async def main(config, base_dir) -> None:
 
                     if valid_op_count != 0 and capability == None:
                         browser_operation_history.append(output)
-                        record_task_history(generation_model, confirmed_task, taken_actions, browser_operation_history, website_input)
+                        record_task_history(generation_model, confirmed_task, taken_actions, browser_operation_history, website_input, success_or_not)
 
                     if monitor:
                         logger.info("Wait for human inspection. Directly press Enter to exit")
@@ -935,8 +936,8 @@ async def main(config, base_dir) -> None:
                     complete_flag = True
 
 
-def record_task_history(generation_model, user_task, action_history, browser_operation_history, website_input):
-    prompt_text = f"User Task: {user_task}, WebSite URL: {website_input}\n\n"
+def record_task_history(generation_model, user_task, action_history, browser_operation_history):
+    prompt_text = f"User Task: {user_task}\n\nSteps Taken:\n"
     for step in action_history:
         prompt_text += f"- {step}\n"
     
