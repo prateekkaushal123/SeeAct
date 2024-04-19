@@ -204,6 +204,7 @@ async def main(config, base_dir) -> None:
     if not is_demo:
         with open(f'{task_file_path}', 'r', encoding='utf-8') as file:
             query_tasks = json.load(file)
+            website_input = ""
     else:
         query_tasks = []
         task_dict = {}
@@ -223,7 +224,7 @@ async def main(config, base_dir) -> None:
         task_dict["task_id"] = file_name
         task_dict["website"] = website_input
         query_tasks.append(task_dict)
-        useHistory = True
+    useHistory = True
 
     for single_query_task in query_tasks:
         confirmed_task = single_query_task["confirmed_task"]
@@ -232,6 +233,8 @@ async def main(config, base_dir) -> None:
             confirmed_website_url = website_dict[confirmed_website]
         except:
             confirmed_website_url = confirmed_website
+        if website_input == "":
+            website_input = confirmed_website_url
         task_id = single_query_task["task_id"]
         main_result_path = os.path.join(save_file_dir, task_id)
         success_or_not = ""
