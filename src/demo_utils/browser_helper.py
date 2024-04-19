@@ -167,7 +167,7 @@ async def normal_new_context_async(
         viewport: dict = {"width": 1920, "height": 1080},
 ):
     city = random.choice(list_us_cities)
-    browser = await playwright.chromium.connect_over_cdp('ws://127.0.0.1:9222/devtools/browser/5463eb5f-5a3f-4229-8273-90cd6d11d139')
+    browser = await playwright.chromium.connect_over_cdp('ws://127.0.0.1:9222/devtools/browser/9534ac49-b66e-4e56-8996-88ef14e810de')
     context = browser.contexts[0]
     '''
     context = await browser.new_context(
