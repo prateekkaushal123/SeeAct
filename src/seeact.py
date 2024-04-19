@@ -219,6 +219,7 @@ async def main(config, base_dir) -> None:
         file_name = current_time.strftime("%Y-%m-%d_%H-%M-%S")
         if not website_input:
             website_input = generation_model.get_website_url_best_suited_to_complete_user_task(task_input)
+            #website_input = "https://google.com"
         task_dict["task_id"] = file_name
         task_dict["website"] = website_input
         query_tasks.append(task_dict)
@@ -940,8 +941,11 @@ async def main(config, base_dir) -> None:
                     complete_flag = True
 
 
-def record_task_history(generation_model, user_task, action_history, browser_operation_history):
-    prompt_text = f"User Task: {user_task}\n\nSteps Taken:\n"
+def record_task_history(generation_model, user_task, action_history, browser_operation_history, website_input, success):
+    if success != "1":
+        print("Caching not possible for failed event, not performing")
+        return
+    prompt_text = f"User Task: {user_task}, Website URL: {website_input}\n\n"
     for step in action_history:
         prompt_text += f"- {step}\n"
     
