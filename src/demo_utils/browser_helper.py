@@ -166,23 +166,28 @@ async def normal_new_context_async(
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
         viewport: dict = {"width": 1920, "height": 1080},
 ):
-    city = random.choice(list_us_cities)
-    browser = await playwright.chromium.connect_over_cdp('ws://127.0.0.1:9222/devtools/browser/9534ac49-b66e-4e56-8996-88ef14e810de')
-    context = browser.contexts[0]
-    '''
-    context = await browser.new_context(
-        storage_state=storage_state,
-        user_agent=user_agent,
-        viewport=viewport,
-        locale=locale,
-        record_har_path=har_path,
-        record_video_dir=video_path,
-        geolocation=geolocation,
+    try :
+        city = random.choice(list_us_cities)
+        file1 = open('./browser_config.txt')
+        link = file1.read()
+        print(link)
+        browser = await playwright.chromium.connect_over_cdp(link)
+        file1.close()
+        context = browser.contexts[0]
+    except:
+        context = await browser.new_context(
+            storage_state=storage_state,
+            user_agent=user_agent,
+            viewport=viewport,
+            locale=locale,
+            record_har_path=har_path,
+            record_video_dir=video_path,
+            geolocation=geolocation,
     )
-    '''
 
-    if tracing:
-        await context.tracing.start(screenshots=trace_screenshots, snapshots=trace_snapshots, sources=trace_sources)
+
+        if tracing:
+            await context.tracing.start(screenshots=trace_screenshots, snapshots=trace_snapshots, sources=trace_sources)
     return context
 
 
