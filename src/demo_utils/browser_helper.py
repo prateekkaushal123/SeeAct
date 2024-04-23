@@ -27,6 +27,7 @@ import os
 import logging
 from aioconsole import ainput, aprint
 import time
+import requests
 
 list_us_cities = [
     ["New York", 40.77, -73.98],
@@ -167,14 +168,15 @@ async def normal_new_context_async(
         viewport: dict = {"width": 1920, "height": 1080},
 ):
     try :
-        city = random.choice(list_us_cities)
-        file1 = open('./browser_config.txt')
-        link = file1.read()
-        print(link)
-        browser = await playwright.chromium.connect_over_cdp(link)
-        file1.close()
+        url = "http://127.0.0.1:9222/json/version"
+        response_url = requests.get(url)
+        print(response_url) 
+        websocket_url = response_url.json()["webSocketDebuggerUrl"]
+        print(websocket_url)
+        browser = await playwright.chromium.connect_over_cdp(websocket_url)
         context = browser.contexts[0]
     except:
+        print("############################\n")
         context = await browser.new_context(
             storage_state=storage_state,
             user_agent=user_agent,
