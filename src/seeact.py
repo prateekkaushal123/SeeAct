@@ -41,7 +41,7 @@ from demo_utils.format_prompt import format_choices, format_ranking_input, postp
 from demo_utils.inference_engine import OpenaiEngine
 from demo_utils.ranking_model import CrossEncoder, find_topk
 from demo_utils.website_dict import website_dict
-from line_profiler import LineProfiler
+#from line_profiler import LineProfiler
 from typing import Any
 
 # Remove Huggingface internal warnings
@@ -266,7 +266,7 @@ async def main(config, base_dir) -> None:
         logger.info(f"task: {confirmed_task}")
         #logger.info(f"id: {task_id}")
         async with async_playwright() as playwright:
-            session_control.browser = await normal_launch_async(playwright)
+            #session_control.browser = await normal_launch_async(playwright)
             session_control.context = await normal_new_context_async(playwright, session_control.browser,
                                                                      tracing=tracing,
                                                                      storage_state=storage_state,
@@ -530,7 +530,7 @@ async def main(config, base_dir) -> None:
                         print(browser_operation_for_input)
                         if (index < len(browser_operation_for_input)):
                             output = browser_operation_for_input[index]
-                            if index == len(browser_operation_for_input)-1 :
+                            if index < len(browser_operation_for_input) :
                                 prompt = generate_prompt(task=confirmed_task, previous=taken_actions, choices=choices,
                                              experiment_split="SeeAct")
                                 output0 = generation_model.generate(prompt=prompt, image_path=input_image_path, turn_number=0)

@@ -25,7 +25,7 @@ from openai.error import (
     InvalidRequestError
 )
 
-from line_profiler import LineProfiler
+#from line_profiler import LineProfiler
 import base64
 import io
 from PIL import Image
